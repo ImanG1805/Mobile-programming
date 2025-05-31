@@ -27,12 +27,13 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.habittracker.ui.theme.HabitTrackerTheme
+import android.content.Context
+import android.content.ActivityNotFoundException
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Ask for POST_NOTIFICATIONS permission if needed
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1)
         }
@@ -60,7 +61,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun LoginScreen(onLogin: () -> Unit, onRegisterClick: () -> Unit) {
     val context = LocalContext.current
-
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -76,29 +78,32 @@ fun LoginScreen(onLogin: () -> Unit, onRegisterClick: () -> Unit) {
         Spacer(modifier = Modifier.height(16.dp))
 
         TextField(
-            value = "",
-            onValueChange = {},
+            value = username,
+            onValueChange = {username = it },
             label = { Text("Username") },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
 
         TextField(
-            value = "",
-            onValueChange = {},
+            value = "password",
+            onValueChange = {password=it },
             label = { Text("Password") },
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation()
         )
         Spacer(modifier = Modifier.height(24.dp))
 
+
         Button(onClick = {
+        if (username.isBlank() || password.isBlank()) {
+            Toast.makeText(context, "Please enter both username and password", Toast.LENGTH_SHORT).show()
+        } else {
             Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
             onLogin()
-        }) {
-            Text(text = "Log In")
         }
-
+        })
+        { Text(text = "Log In") }
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
@@ -202,11 +207,51 @@ fun HomeScreen() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Welcome to your Habit Dashboard!", style = MaterialTheme.typography.headlineMedium)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = {
+            val intent = Intent(context, DashboardActivity::class.java)
+            context.startActivity(intent)
+        }) {
+            Text("Open Tracker")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = {
+            shareHabitProgress(context, "I completed my habit goals for today! ✅ #HabitTracker")
+        }) {
+            Text("Share Habit Progress")
+        }
     }
 }
+
+
 
 fun isValidEmail(email: String): Boolean {
     val regex = "^[A-Za-z0-9+_.-]+@(.+)$".toRegex()
     return regex.matches(email)
+}
+fun shareHabitProgress(context: Context, progressText: String) {
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, progressText)
+    }
+    val chooser = Intent.createChooser(intent, "Share your habit progress")
+    try {
+        context.startActivity(chooser)
+    } catch (e: ActivityNotFoundException) {
+        Toast.makeText(context, "No app available to share", Toast.LENGTH_SHORT).show()
+    }
+}
+
+@Composable
+fun MyImage() {
+    Image(
+        painter = painterResource(id = R.drawable.background),
+        contentDescription = "My Picture",
+        modifier = Modifier.size(200.dp),
+        contentScale = ContentScale.Crop
+    )
 }
 
