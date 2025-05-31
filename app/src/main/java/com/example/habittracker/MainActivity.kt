@@ -29,6 +29,8 @@ import androidx.core.content.ContextCompat
 import com.example.habittracker.ui.theme.HabitTrackerTheme
 import android.content.Context
 import android.content.ActivityNotFoundException
+import com.example.habittracker.CreateCustomHabitScreen
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,16 +44,21 @@ class MainActivity : ComponentActivity() {
             HabitTrackerTheme {
                 var isLoggedIn by remember { mutableStateOf(false) }
                 var showRegister by remember { mutableStateOf(false) }
+                var showCreateHabit by remember { mutableStateOf(false) }
+
 
                 Surface(modifier = Modifier.fillMaxSize()) {
+
                     when {
                         showRegister -> RegistrationScreen(onBack = { showRegister = false })
-                        isLoggedIn -> HomeScreen()
+                        isLoggedIn && showCreateHabit -> CreateCustomHabitScreen(onSave = { showCreateHabit = false })
+                        isLoggedIn -> HomeScreen(onCreateHabit = { showCreateHabit = true })
                         else -> LoginScreen(
                             onLogin = { isLoggedIn = true },
                             onRegisterClick = { showRegister = true }
                         )
                     }
+
                 }
             }
         }
@@ -96,12 +103,12 @@ fun LoginScreen(onLogin: () -> Unit, onRegisterClick: () -> Unit) {
 
 
         Button(onClick = {
-        if (username.isBlank() || password.isBlank()) {
-            Toast.makeText(context, "Please enter both username and password", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
-            onLogin()
-        }
+            if (username.isBlank() || password.isBlank()) {
+                Toast.makeText(context, "Please enter both username and password", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
+                onLogin()
+            }
         })
         { Text(text = "Log In") }
         Spacer(modifier = Modifier.height(16.dp))
@@ -191,7 +198,7 @@ fun CustomInputField(
 }
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(onCreateHabit: () -> Unit) {
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
@@ -223,9 +230,14 @@ fun HomeScreen() {
         }) {
             Text("Share Habit Progress")
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = onCreateHabit) {
+            Text("Create Custom Habit")
+        }
     }
 }
-
 
 
 fun isValidEmail(email: String): Boolean {
@@ -254,4 +266,3 @@ fun MyImage() {
         contentScale = ContentScale.Crop
     )
 }
-
