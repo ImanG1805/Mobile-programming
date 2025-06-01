@@ -6,22 +6,21 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.*
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -29,8 +28,16 @@ import androidx.core.content.ContextCompat
 import com.example.habittracker.ui.theme.HabitTrackerTheme
 import android.content.Context
 import android.content.ActivityNotFoundException
+import dagger.hilt.android.AndroidEntryPoint
+import androidx.compose.material3.*
 
-class MainActivity : ComponentActivity() {
+
+
+
+
+@AndroidEntryPoint
+
+ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -42,16 +49,21 @@ class MainActivity : ComponentActivity() {
             HabitTrackerTheme {
                 var isLoggedIn by remember { mutableStateOf(false) }
                 var showRegister by remember { mutableStateOf(false) }
+                var showCreateHabit by remember { mutableStateOf(false) }
+
 
                 Surface(modifier = Modifier.fillMaxSize()) {
+
                     when {
                         showRegister -> RegistrationScreen(onBack = { showRegister = false })
-                        isLoggedIn -> HomeScreen()
+                        isLoggedIn && showCreateHabit -> CreateCustomHabitScreen(onSave = { showCreateHabit = false })
+                        isLoggedIn -> HomeScreen(onCreateHabit = { showCreateHabit = true })
                         else -> LoginScreen(
                             onLogin = { isLoggedIn = true },
                             onRegisterClick = { showRegister = true }
                         )
                     }
+
                 }
             }
         }
@@ -59,10 +71,20 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoginScreen(onLogin: () -> Unit, onRegisterClick: () -> Unit) {
+fun LoginScreen(onLogin: () -> Unit, onRegisterClick: () -> Unit,  viewModel: LoginViewModel = hiltViewModel()) {
     val context = LocalContext.current
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    val loginSuccess = viewModel.loginSuccess
+    LaunchedEffect(loginSuccess) {
+        if (loginSuccess == true) {
+            Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
+            onLogin()
+        } else if (loginSuccess == false) {
+            Toast.makeText(context, "Invalid credentials", Toast.LENGTH_SHORT).show()
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -86,12 +108,13 @@ fun LoginScreen(onLogin: () -> Unit, onRegisterClick: () -> Unit) {
         Spacer(modifier = Modifier.height(8.dp))
 
         TextField(
-            value = "password",
-            onValueChange = {password=it },
+            value = password,
+            onValueChange = { password = it },
             label = { Text("Password") },
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation()
         )
+
         Spacer(modifier = Modifier.height(24.dp))
 
 
@@ -99,8 +122,8 @@ fun LoginScreen(onLogin: () -> Unit, onRegisterClick: () -> Unit) {
         if (username.isBlank() || password.isBlank()) {
             Toast.makeText(context, "Please enter both username and password", Toast.LENGTH_SHORT).show()
         } else {
-            Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
-            onLogin()
+            viewModel.login(username, password)
+
         }
         })
         { Text(text = "Log In") }
@@ -115,12 +138,26 @@ fun LoginScreen(onLogin: () -> Unit, onRegisterClick: () -> Unit) {
 }
 
 @Composable
-fun RegistrationScreen(onBack: () -> Unit) {
+fun RegistrationScreen(onBack: () -> Unit,viewModel: RegisterViewModel = hiltViewModel()) {
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    val scrollState = rememberScrollState()
     val context = LocalContext.current
+    val success by viewModel.registrationSuccess.collectAsState()
+
+
+
+
+
+
+
+    LaunchedEffect(success) {
+        if (success) {
+            Toast.makeText(context, "Registered successfully!", Toast.LENGTH_SHORT).show()
+            onBack()
+        }
+    }
+    val scrollState = rememberScrollState()
 
     Column(
         modifier = Modifier
@@ -141,15 +178,17 @@ fun RegistrationScreen(onBack: () -> Unit) {
         CustomInputField(value = password, label = "Password", isPassword = true) { password = it }
         Spacer(modifier = Modifier.height(16.dp))
 
+
         Button(onClick = {
             if (!isValidEmail(email)) {
                 Toast.makeText(context, "Invalid Email", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(context, "Registered Successfully!", Toast.LENGTH_SHORT).show()
+                viewModel.registerUser(username, email, password)
             }
         }) {
             Text("Register")
         }
+
 
         Text(
             text = "Back to Login",
@@ -180,7 +219,7 @@ fun CustomInputField(
         modifier = Modifier.fillMaxWidth(),
         trailingIcon = {
             if (isPassword) {
-                val icon = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility
+                val icon = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
                 val desc = if (passwordVisible) "Hide password" else "Show password"
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(imageVector = icon, contentDescription = desc)
@@ -191,7 +230,7 @@ fun CustomInputField(
 }
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(onCreateHabit: () -> Unit) {
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
@@ -223,9 +262,14 @@ fun HomeScreen() {
         }) {
             Text("Share Habit Progress")
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = onCreateHabit) {
+            Text("Create Custom Habit")
+        }
     }
 }
-
 
 
 fun isValidEmail(email: String): Boolean {
@@ -245,13 +289,5 @@ fun shareHabitProgress(context: Context, progressText: String) {
     }
 }
 
-@Composable
-fun MyImage() {
-    Image(
-        painter = painterResource(id = R.drawable.background),
-        contentDescription = "My Picture",
-        modifier = Modifier.size(200.dp),
-        contentScale = ContentScale.Crop
-    )
-}
+
 
