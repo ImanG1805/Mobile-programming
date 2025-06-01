@@ -1,8 +1,5 @@
 package com.example.habittracker
-<<<<<<< HEAD
 
-=======
->>>>>>> d7e2c7fc6b2891431aafc232d8522a5a645f45ec
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,9 +9,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.habittracker.data.Habit
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
-fun CreateCustomHabitScreen(onSave: () -> Unit) {
+fun CreateCustomHabitScreen(
+    onSave: () -> Unit,
+    viewModel: HabitViewModel = hiltViewModel()
+) {
     var habitName by remember { mutableStateOf("") }
     var frequency by remember { mutableStateOf("Daily") }
     var reminderEnabled by remember { mutableStateOf(false) }
@@ -79,7 +81,13 @@ fun CreateCustomHabitScreen(onSave: () -> Unit) {
 
         Button(
             onClick = {
-                // You can save the habit to a list or database here
+                val habit = Habit(
+                    name = habitName,
+                    frequency = frequency,
+                    reminderTime = if (reminderEnabled) reminderTime else null,
+                    userId = 1
+                )
+                viewModel.insertHabit(habit)
                 onSave()
             },
             modifier = Modifier.fillMaxWidth()
@@ -87,8 +95,6 @@ fun CreateCustomHabitScreen(onSave: () -> Unit) {
             Text("Save Habit")
         }
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> d7e2c7fc6b2891431aafc232d8522a5a645f45ec
+
+
