@@ -1,5 +1,8 @@
 package com.example.habittracker
+<<<<<<< HEAD
 
+=======
+>>>>>>> d7e2c7fc6b2891431aafc232d8522a5a645f45ec
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -84,4 +87,8 @@ fun CreateCustomHabitScreen(onSave: () -> Unit) {
             Text("Save Habit")
         }
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> d7e2c7fc6b2891431aafc232d8522a5a645f45ec

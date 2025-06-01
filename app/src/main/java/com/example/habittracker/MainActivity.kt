@@ -28,8 +28,13 @@ import androidx.core.content.ContextCompat
 import com.example.habittracker.ui.theme.HabitTrackerTheme
 import android.content.Context
 import android.content.ActivityNotFoundException
+<<<<<<< HEAD
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.compose.material3.*
+=======
+import com.example.habittracker.CreateCustomHabitScreen
+
+>>>>>>> d7e2c7fc6b2891431aafc232d8522a5a645f45ec
 
 
 
@@ -119,12 +124,21 @@ fun LoginScreen(onLogin: () -> Unit, onRegisterClick: () -> Unit,  viewModel: Lo
 
 
         Button(onClick = {
+<<<<<<< HEAD
         if (username.isBlank() || password.isBlank()) {
             Toast.makeText(context, "Please enter both username and password", Toast.LENGTH_SHORT).show()
         } else {
             viewModel.login(username, password)
 
         }
+=======
+            if (username.isBlank() || password.isBlank()) {
+                Toast.makeText(context, "Please enter both username and password", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
+                onLogin()
+            }
+>>>>>>> d7e2c7fc6b2891431aafc232d8522a5a645f45ec
         })
         { Text(text = "Log In") }
         Spacer(modifier = Modifier.height(16.dp))
@@ -289,5 +303,17 @@ fun shareHabitProgress(context: Context, progressText: String) {
     }
 }
 
+<<<<<<< HEAD
 
 
+=======
+@Composable
+fun MyImage() {
+    Image(
+        painter = painterResource(id = R.drawable.background),
+        contentDescription = "My Picture",
+        modifier = Modifier.size(200.dp),
+        contentScale = ContentScale.Crop
+    )
+}
+>>>>>>> d7e2c7fc6b2891431aafc232d8522a5a645f45ec
